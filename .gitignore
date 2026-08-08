@@ -1,0 +1,40 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# ── Virtual environments ───────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+
+# ── Environment / secrets ──────────────────────────────────────────────────────
+# Note: .env files included per project repository instructions (with DB password masked)
+
+
+# ── Datasets (PDFs — likely copyrighted, must not be committed) ────────────────
+datasets/**/*.pdf
+
+# ── Vector store persisted to disk (populated at runtime) ─────────────────────
+chroma_db/
+
+# ── IDE / OS ───────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.DS_Store
+Thumbs.db
+
+# ── Test artefacts ─────────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ── Alembic ────────────────────────────────────────────────────────────────────
+# Keep alembic.ini and migrations/ tracked; ignore only lock files if any
