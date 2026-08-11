@@ -4,16 +4,16 @@ Status: **Locked.** Changes to this document require a deliberate decision, not 
 
 ## 1. Data
 
-- Source material: narrow, subject-specific PDFs collected manually by the team (not scraped, not synthetic).
-- Ingestion order: DBMS first. Other subjects (DSA, OS, CN, OOP) are added only after the DBMS pipeline is confirmed working end-to-end (ingestion → retrieval → question generation → evaluation).
-- Storage location: `/datasets/<subject>/*.pdf` at project root, gitignored.
+- Source material: narrow, branch- and subject-specific PDFs collected manually by the team (not scraped, not synthetic).
+- Ingestion order: DBMS for the `cs` branch first. Once the pipeline is confirmed end-to-end (ingestion → retrieval → question generation → evaluation), ingest the remaining available CS subjects: DSA, OS, CN, OOP, C programming, C++ programming, Java, JavaScript, Python, Linux, Git and GitHub, SOLID principles, and System Design. Other branches begin only after their resources are reviewed.
+- Storage location: `/datasets/<branch>/<subject>/*.pdf` at project root, gitignored. Initial branch roots are `cs`, `mech`, `extc`, and `electrical`.
 
 ## 2. RAG pipeline
 
 1. **Ingestion**: PyMuPDF extracts text from PDFs.
-2. **Chunking**: recursive chunking, each chunk tagged with metadata (subject, source file, page, topic if extractable).
+2. **Chunking**: recursive chunking, each chunk tagged with metadata (branch, subject, source file, page, topic if extractable).
 3. **Embeddings**: all-MiniLM-L6-v2 (sentence-transformers).
-4. **Vector store**: Chroma, with per-chunk metadata filters (subject, company-type tag, topic).
+4. **Vector store**: Chroma, with per-chunk metadata filters (branch, subject, company-type tag, topic). Every retrieval filters by branch before applying subject/topic filters.
 5. **Reflective layer (Self-RAG-inspired)**:
    - Relevance filtering: discard retrieved chunks that don't actually support the query.
    - Groundedness checking: verify generated content is supported by retrieved chunks before returning it.
@@ -21,7 +21,7 @@ Status: **Locked.** Changes to this document require a deliberate decision, not 
 
 ## 3. Company tagging
 
-Tagged by **type**, not specific company name — e.g. `mass_recruiter_it`, `product_based`, `core_engineering`. This keeps the dataset general and avoids the maintenance burden and legal ambiguity of company-specific scraped content.
+Tagged by **type**, not specific company name — initial archetypes are `mass_recruiter_it`, `product_based`, and `fintech_core` (extensible). This keeps the dataset general and avoids the maintenance burden and legal ambiguity of company-specific scraped content.
 
 ## 4. Backend
 

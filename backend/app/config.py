@@ -7,7 +7,9 @@ directly in source code — always reference settings.* instead.
 """
 
 from functools import lru_cache
+from pathlib import Path
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -23,7 +25,23 @@ class Settings(BaseSettings):
 
     # ── Dataset root (used by rag/ module when that phase begins) ──────────────
     # Kept here so config is the single source of truth for paths.
-    dataset_path: str = "/datasets"
+    dataset_root: Path
+    chroma_persist_directory: Path = Path("chroma_db")
+
+    @field_validator("dataset_root")
+    @classmethod
+    def resolve_dataset_root(cls, value: Path) -> Path:
+        """Resolve and validate the offline dataset location at startup."""
+        resolved = value.expanduser().resolve()
+        if not resolved.is_dir():
+            raise ValueError(f"DATASET_ROOT does not exist or is not a directory: {resolved}")
+        return resolved
+
+    @field_validator("chroma_persist_directory")
+    @classmethod
+    def resolve_chroma_directory(cls, value: Path) -> Path:
+        """Resolve the persistent Chroma location without creating it during config loading."""
+        return value.expanduser().resolve()
 
     model_config = SettingsConfigDict(
         env_file=".env",

@@ -1,10 +1,15 @@
 # Progress
 
-Last updated: 2026-08-08
+Last updated: 2026-08-09
 
-## Status: Phase 1 — Core modules (API foundation, auth, security)
+## Status: Phase 2 — RAG system and practice integration
 
 ### Done
+- [x] Phase 2 schema migration (`0002`) applied to Supabase: companies, normalized questions/answers/evaluations, coverage, behavioral questions, and practice plans/items
+- [x] Dataset hierarchy expanded to branch/subject layout; RAG ingestion and retrieval must use branch metadata and filtering
+- [x] Initial CS ingestion scope expanded beyond the five placement-core subjects to include the supplied programming, tooling, design, and principles PDFs
+- [x] Phase 2 Step 2: persistent Chroma ingestion built and verified across all 14 CS PDFs (13,824 stored chunks; repeat DBMS run skipped all 693 duplicates)
+- [x] Phase 2 Step 3: branch-aware raw retrieval and independent cross-encoder reranking verified on DBMS normalization, transactions, and joins topics
 - [x] Architecture fully designed and locked (see ARCHITECTURE.md)
 - [x] Database decision: PostgreSQL via Supabase, shared across team
 - [x] Four-screen static frontend mockup delivered (Dashboard, Practice, History, Resume Match)
