@@ -43,13 +43,13 @@ Last updated: 2026-08-09
 6. Smoke-test: POST `/auth/register`, POST `/auth/login`, GET `/auth/me`, confirm 429 on 6th rapid login
 
 ### Not started (do not begin until above is complete and tested)
-- [ ] DBMS PDF ingestion (`rag/ingestion.py`)
-- [ ] Embeddings + Chroma vector store setup
-- [ ] Self-RAG relevance filtering + groundedness checking
-- [ ] `practice/` module (question generation, answer submission)
-- [ ] `evaluation/` module (rubric-based scoring)
+- [x] DBMS PDF ingestion (`rag/ingestion.py`)
+- [x] Embeddings + Chroma vector store setup
+- [x] Self-RAG relevance filtering + groundedness checking
+- [x] `practice/` module (question generation, answer submission)
+- [x] `evaluation/` module (rubric-based scoring)
 - [ ] `resume/` module (skill extraction, JD gap matching)
-- [ ] `history/` module (dashboard chart data)
+- [x] `history/` module (dashboard chart data)
 - [x] Frontend template scaffolding (Vite + React, Axios client with JWT interceptors, API services & page templates)
 - [ ] Frontend wiring to live API (currently static mockup & templates ready)
 - [ ] Expansion of ingestion to DSA, OS, CN, OOP

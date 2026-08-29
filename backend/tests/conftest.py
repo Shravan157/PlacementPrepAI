@@ -34,7 +34,10 @@ from app.main import app as fastapi_app  # noqa: E402  — alias avoids collisio
 
 # Import all model modules so that Base.metadata is fully populated
 # before create_all() runs.
-import app.auth.models  # noqa: F401, E402  (this rebinds `app` to the package — hence the alias above)
+import app.auth.models  # noqa: F401, E402
+import app.evaluation.models  # noqa: F401, E402
+import app.practice.models  # noqa: F401, E402
+# history/ has no dedicated ORM models — it aggregates from practice/evaluation tables
 
 # ── SQLite in-memory test engine ───────────────────────────────────────────────
 # StaticPool ensures all connections share the same in-memory database
@@ -73,7 +76,14 @@ def client(db_session):
     """
     Return a TestClient with get_db overridden to use the test session.
     Dependency override is cleared after the test to avoid cross-test leakage.
+
+    The slowapi limiter storage is reset before each test so that login
+    calls in one test don't exhaust the rate limit for the next test.
     """
+    from app.core.rate_limit import limiter
+
+    # Reset all rate-limit counters so each test starts with a clean slate.
+    limiter._storage.reset()
 
     def _override_get_db():
         try:

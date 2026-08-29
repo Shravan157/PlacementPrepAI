@@ -33,6 +33,5 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONRe
     """429 Too Many Requests — slowapi fires this when LOGIN_RATE_LIMIT is hit."""
     return JSONResponse(
         status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-        # CHANGE HERE: exc.detail -> exc.description
-        content={"detail": f"Rate limit exceeded: {exc.description}"}, 
+        content={"detail": f"Rate limit exceeded: {str(exc)}"}, 
     )

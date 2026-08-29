@@ -8,7 +8,9 @@ import axios from 'axios';
  * - Request interceptor: automatically attaches JWT Bearer token from localStorage
  * - Response interceptor: handles 401 Unauthorized errors and API error formatting
  */
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+// In development, use Vite's same-origin `/api` proxy to avoid a browser CORS
+// request. Deployments continue to provide their backend through the env var.
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? '/api' : 'http://localhost:8000');
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
