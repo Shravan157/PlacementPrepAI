@@ -17,6 +17,7 @@ from app.practice.models import (
     Question,
     TopicCoverage,
 )
+from app.core.llm import generate_llm_text
 from app.practice.schemas import AnswerCreate, QuestionGenerateRequest
 from app.rag import rerank, retriever, self_rag
 
@@ -28,11 +29,45 @@ def _synthesize_question_from_chunks(
     topic: str,
     difficulty: str,
     chunks: list,
+    company_type: Optional[str] = None,
 ) -> str:
-    """Synthesize a targeted conceptual or practical interview question from syllabus chunks."""
+    """Synthesize a targeted conceptual or practical interview question from syllabus chunks via LLM."""
     if not chunks:
         return f"Explain the fundamental principles of {topic} in {subject.upper()} and discuss key trade-offs."
 
+    context_snippets = "\n---\n".join([f"Chunk {i+1}:\n{c.text.strip()}" for i, c in enumerate(chunks[:3])])
+
+    system_prompt = (
+        "You are an expert technical interviewer for computer science campus placements (covering DSA, DBMS, OS, CN, OOP).\n"
+        "Your goal is to generate ONE precise, high-quality technical interview question grounded in the provided syllabus context chunks.\n"
+        "STRICT GUARDRAILS:\n"
+        "1. Output ONLY the interview question text itself.\n"
+        "2. Do NOT include greetings, intro phrases (e.g. 'Here is a question:'), or formatting wrapper text.\n"
+        "3. Ensure the question tests understanding appropriate for the requested difficulty level.\n"
+        "4. Do NOT hallucinate concepts outside the subject/topic domain."
+    )
+
+    user_prompt = (
+        f"Subject: {subject.upper()}\n"
+        f"Topic: {topic}\n"
+        f"Target Difficulty: {difficulty}\n"
+        f"Interview Track: {company_type or 'General Product'}\n\n"
+        f"Syllabus Context Chunks:\n{context_snippets}\n\n"
+        f"Generate 1 focused interview question:"
+    )
+
+    try:
+        generated_q = generate_llm_text(
+            prompt=user_prompt,
+            system_prompt=system_prompt,
+            timeout=25.0,
+        )
+        if generated_q and len(generated_q.strip()) > 10:
+            return generated_q.strip().strip('"')
+    except Exception as err:
+        LOGGER.warning("LLM question synthesis failed: %s. Using chunk snippet fallback.", err)
+
+    # Fallback if LLM fails
     top_chunk_text = chunks[0].text.strip()
     first_sentence = top_chunk_text.split(".")[0].strip()
 
@@ -89,6 +124,7 @@ def generate_question(db: Session, user_id: uuid.UUID, req: QuestionGenerateRequ
             topic=req.topic,
             difficulty=req.difficulty_tag,
             chunks=relevant_chunks,
+            company_type=req.company_type,
         )
         chunk_ids = [c.id for c in relevant_chunks]
 

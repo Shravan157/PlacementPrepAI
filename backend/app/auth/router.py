@@ -13,12 +13,13 @@ To change the limit, edit that constant — not this file.
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
-from app.auth.schemas import Token, UserCreate, UserLogin, UserOut
+from app.auth.schemas import Token, UserCreate, UserLogin, UserOut, UserUpdate
 from app.auth.service import (
     DuplicateEmailError,
     InvalidCredentialsError,
     authenticate_user,
     create_user,
+    update_user,
 )
 from app.core.rate_limit import LOGIN_RATE_LIMIT, limiter
 from app.core.security import create_access_token
@@ -78,3 +79,17 @@ def me(current_user: User = Depends(get_current_user)) -> UserOut:
     401 if the token is missing, invalid, or expired.
     """
     return current_user  # type: ignore[return-value]
+
+
+@router.put("/me", response_model=UserOut)
+def update_me(
+    user_update: UserUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> UserOut:
+    """
+    Update the authenticated user's profile (name or password).
+
+    Requires Authorization: Bearer <token> header.
+    """
+    return update_user(db=db, user=current_user, user_update=user_update)  # type: ignore[return-value]

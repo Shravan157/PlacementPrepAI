@@ -9,7 +9,7 @@ This separation keeps service functions reusable and testable in isolation.
 from sqlalchemy.orm import Session
 
 from app.auth.models import User
-from app.auth.schemas import UserCreate
+from app.auth.schemas import UserCreate, UserUpdate
 from app.core.security import hash_password, verify_password
 
 
@@ -64,4 +64,16 @@ def authenticate_user(db: Session, email: str, password: str) -> User:
     user = get_user_by_email(db, email)
     if not user or not verify_password(password, user.hashed_password):
         raise InvalidCredentialsError("Invalid email or password")
+    return user
+
+
+def update_user(db: Session, user: User, user_update: UserUpdate) -> User:
+    """Update name or password of an existing user profile."""
+    if user_update.name is not None:
+        user.name = user_update.name
+    if user_update.password is not None:
+        user.hashed_password = hash_password(user_update.password)
+
+    db.commit()
+    db.refresh(user)
     return user

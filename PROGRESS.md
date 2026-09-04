@@ -1,61 +1,60 @@
 # Progress
 
-Last updated: 2026-08-09
+Last updated: 2026-08-30
 
-## Status: Phase 2 — RAG system and practice integration
+## Status: Phase 2 — RAG system, LLM Self-RAG, and practice UI integration
 
 ### Done
 - [x] Phase 2 schema migration (`0002`) applied to Supabase: companies, normalized questions/answers/evaluations, coverage, behavioral questions, and practice plans/items
-- [x] Dataset hierarchy expanded to branch/subject layout; RAG ingestion and retrieval must use branch metadata and filtering
-- [x] Initial CS ingestion scope expanded beyond the five placement-core subjects to include the supplied programming, tooling, design, and principles PDFs
-- [x] Phase 2 Step 2: persistent Chroma ingestion built and verified across all 14 CS PDFs (13,824 stored chunks; repeat DBMS run skipped all 693 duplicates)
+- [x] Dataset hierarchy expanded to branch/subject layout; RAG ingestion and retrieval use branch metadata and filtering
+- [x] Ingestion completed across all 14 CS PDFs: DBMS, DSA, OS, CN, OOP, C, C++, Java, JS, Python, Linux, Git, SOLID principles, and System Design (13,824 stored vector chunks in ChromaDB)
 - [x] Phase 2 Step 3: branch-aware raw retrieval and independent cross-encoder reranking verified on DBMS normalization, transactions, and joins topics
+- [x] Unified LLM Core Engine (`app/core/llm.py`): Google Gemini 3.6 Flash (`gemini-3.6-flash`) as primary, Groq (`openai/gpt-oss-120b`) as fallback provider with automated failover and JSON schema guardrails
+- [x] RAG Question Generation (`practice/service.py`): Runtime question synthesis grounded in retrieved vector chunks with Self-RAG groundedness checking (`self_rag.check_groundedness`)
+- [x] AI Rubric Evaluation (`evaluation/service.py`): Automated rubric scoring across Correctness (0-10), Completeness (0-10), and Clarity (0-10) with constructive feedback and weak subtopic detection
+- [x] Frontend API Client Services (`frontend/src/api/`): Axios wrappers for `/auth`, `/practice`, and `/evaluation` endpoints
+- [x] Interactive Frontend Practice Workspace (`frontend/src/pages/Practice/`): Full 3-step live interactive mock interview UI (01 Configure -> 02 Interview -> 03 Evaluate) wired to backend API
 - [x] Architecture fully designed and locked (see ARCHITECTURE.md)
 - [x] Database decision: PostgreSQL via Supabase, shared across team
 - [x] Four-screen static frontend mockup delivered (Dashboard, Practice, History, Resume Match)
 - [x] Folder structure defined and scaffolded on disk
-- [x] `backend/requirements.txt` — pinned dependencies (fastapi, sqlalchemy, alembic, passlib, python-jose, slowapi, pytest)
-- [x] `backend/.env` — template with Supabase project ref; team fills in password + JWT secret
-- [x] `backend/alembic.ini` — points at `app/db/migrations`, no secrets in file
-- [x] `backend/app/config.py` — pydantic-settings, all env vars, cached `get_settings()`
-- [x] `backend/app/core/database.py` — SQLAlchemy engine + SessionLocal, direct Supabase connection
+- [x] `backend/requirements.txt` — pinned dependencies (fastapi, sqlalchemy, alembic, passlib, python-jose, slowapi, pytest, httpx, chromadb)
+- [x] `backend/.env` — Supabase project ref, JWT secret, GEMINI_API_KEY, GROQ_API_KEY, DATASET_ROOT, CHROMA_PERSIST_DIRECTORY
+- [x] `backend/alembic.ini` — points at `app/db/migrations`
+- [x] `backend/app/config.py` — pydantic-settings with LLM API keys and model options
+- [x] `backend/app/core/database.py` — SQLAlchemy engine + SessionLocal
 - [x] `backend/app/core/security.py` — `hash_password`, `verify_password`, `create_access_token`, `decode_access_token`
-- [x] `backend/app/core/rate_limit.py` — slowapi `Limiter`, `LOGIN_RATE_LIMIT = "5/minute"` (tunable constant)
+- [x] `backend/app/core/rate_limit.py` — slowapi `Limiter`, `LOGIN_RATE_LIMIT = "5/minute"`
 - [x] `backend/app/core/exceptions.py` — handlers for 401, 403, 429 (RateLimitExceeded)
 - [x] `backend/app/db/base.py` — SQLAlchemy `DeclarativeBase`
 - [x] `backend/app/db/migrations/env.py` — Alembic env, reads `DATABASE_URL` from settings
-- [x] `backend/app/db/migrations/versions/0001_create_users_table.py` — creates `users` table only
-- [x] `backend/app/auth/models.py` — `User` ORM model (UUID PK, email unique+indexed, hashed_password, name, created_at)
-- [x] `backend/app/auth/schemas.py` — Pydantic v2: `UserCreate`, `UserLogin`, `UserOut`, `Token`, `TokenData`
-- [x] `backend/app/auth/service.py` — `create_user`, `authenticate_user`, `get_user_by_email`; domain exceptions only
-- [x] `backend/app/auth/router.py` — POST /register (201/409), POST /login (200/401, rate-limited), GET /me (200/401)
-- [x] `backend/app/dependencies.py` — `get_db()`, `get_current_user()` (generic, reusable by future modules)
-- [x] `backend/app/main.py` — FastAPI app, auth router only, slowapi + exception handlers registered
-- [x] `backend/tests/conftest.py` — SQLite in-memory test DB, `client` + `db_session` fixtures
-- [x] `backend/tests/test_auth.py` — 8 test cases covering all PROGRESS.md scenarios + invalid JWT + short password
+- [x] `backend/app/auth/models.py`, `schemas.py`, `service.py`, `router.py` — User registration, login, profile
+- [x] `backend/app/practice/models.py`, `schemas.py`, `service.py`, `router.py` — Question generation, answer submission, topic coverage
+- [x] `backend/app/evaluation/models.py`, `schemas.py`, `service.py`, `router.py` — Rubric evaluation and score updates
+- [x] `backend/app/dependencies.py` — `get_db()`, `get_current_user()`
+- [x] `backend/app/main.py` — FastAPI app with auth, practice, evaluation, history routers mounted
 
-### Immediate next actions (do in order)
-1. Fill in `backend/.env`: replace `<password>` with your Supabase password, generate a real `JWT_SECRET_KEY`
-2. Install dependencies: `pip install -r backend/requirements.txt`
-3. Run tests (no Supabase needed): `cd backend && pytest tests/test_auth.py -v`
-4. Run Alembic migration against Supabase: `cd backend && alembic upgrade head`
-5. Start the server: `uvicorn app.main:app --reload`
-6. Smoke-test: POST `/auth/register`, POST `/auth/login`, GET `/auth/me`, confirm 429 on 6th rapid login
+### Current focus & Next steps
+1. Test live mock interview flow in frontend browser UI (`http://localhost:5173`)
+2. Wire Dashboard and History components to display live user coverage and rubric performance charts
+3. Implement `resume/` module (skill extraction from resume PDFs and JD gap matching)
 
-### Not started (do not begin until above is complete and tested)
+### Completed Roadmap Checklist
 - [x] DBMS PDF ingestion (`rag/ingestion.py`)
-- [x] Embeddings + Chroma vector store setup
+- [x] Embeddings + Chroma vector store setup (13,824 chunks stored)
+- [x] Expansion of ingestion to DSA, OS, CN, OOP, and CS core tools
 - [x] Self-RAG relevance filtering + groundedness checking
-- [x] `practice/` module (question generation, answer submission)
-- [x] `evaluation/` module (rubric-based scoring)
-- [ ] `resume/` module (skill extraction, JD gap matching)
-- [x] `history/` module (dashboard chart data)
+- [x] Core LLM Integration (Gemini 3.6 Flash + Groq fallback)
+- [x] `practice/` module (LLM question generation from RAG chunks, answer submission)
+- [x] `evaluation/` module (LLM rubric-based scoring)
+- [x] `history/` module (dashboard & chart data API endpoints)
 - [x] Frontend template scaffolding (Vite + React, Axios client with JWT interceptors, API services & page templates)
-- [ ] Frontend wiring to live API (currently static mockup & templates ready)
-- [ ] Expansion of ingestion to DSA, OS, CN, OOP
+- [x] Frontend practice workspace wiring to live API
+- [ ] `resume/` module (skill extraction, JD gap matching)
 
 ## Open decisions
 
 - **JWT strategy**: plain JWT with fixed 24h expiry chosen for Phase 1 — no refresh-token rotation. Revisit before viva if evaluators ask about security hardening.
 
 ## Rule: folders marked [NOT YET] in ARCHITECTURE.md are not created until their module's phase begins. No empty placeholders.
+

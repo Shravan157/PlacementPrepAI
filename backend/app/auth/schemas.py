@@ -42,6 +42,29 @@ class UserLogin(BaseModel):
     password: str
 
 
+class UserUpdate(BaseModel):
+    """PUT /auth/me — request body."""
+
+    name: str | None = None
+    password: str | None = None
+
+    @field_validator("name")
+    @classmethod
+    def name_not_blank(cls, v: str | None) -> str | None:
+        if v is not None:
+            if not v.strip():
+                raise ValueError("Name must not be blank")
+            return v.strip()
+        return v
+
+    @field_validator("password")
+    @classmethod
+    def password_min_length(cls, v: str | None) -> str | None:
+        if v is not None and len(v) < 8:
+            raise ValueError("Password must be at least 8 characters")
+        return v
+
+
 # ── Response schemas ───────────────────────────────────────────────────────────
 
 class UserOut(BaseModel):

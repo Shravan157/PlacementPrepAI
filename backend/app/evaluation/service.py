@@ -8,6 +8,8 @@ from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+import json
+from app.core.llm import generate_llm_text
 from app.evaluation.models import Evaluation
 from app.evaluation.schemas import EvaluationCreate
 from app.practice.models import Answer, Question, TopicCoverage
@@ -21,37 +23,73 @@ def _compute_rubric_scores(
     answer_text: str,
     topic: str,
 ) -> tuple[float, float, float, str, Optional[str]]:
-    """Compute rubric scores (0-10) for correctness, completeness, and clarity.
-
-    Returns (correctness, completeness, clarity, feedback, weakest_subtopic).
-    """
+    """Compute rubric scores (0-10) for correctness, completeness, and clarity via LLM with fallback."""
     clean_ans = answer_text.strip()
-    words = clean_ans.split()
-    word_count = len(words)
+    word_count = len(clean_ans.split())
 
     if word_count < 5:
         return (
             2.0,
             2.0,
             3.0,
-            "Answer is too short to provide adequate technical detail. Expand on key definitions, mechanisms, and examples.",
+            "Answer is too short to provide adequate technical detail. Expand on key definitions, mechanisms, and practical examples.",
             f"Basic definitions in {topic}",
         )
 
-    # Base scores start from content length and topic relevance
+    system_prompt = (
+        "You are a rigorous technical interview evaluator for CS campus placements.\n"
+        "Your task is to evaluate a candidate's answer to a technical interview question based on 3 rubric criteria (0.0 to 10.0 scale):\n"
+        "1. correctness_score: Technical accuracy, correct terminology, definitions, and logic.\n"
+        "2. completeness_score: Depth, thoroughness, coverage of mechanisms and edge cases.\n"
+        "3. clarity_score: Readability, structure, precise terminology, and explanation flow.\n\n"
+        "STRICT GUARDRAILS:\n"
+        "Respond ONLY with a valid JSON object matching this exact format:\n"
+        "{\n"
+        '  "correctness_score": 8.5,\n'
+        '  "completeness_score": 7.0,\n'
+        '  "clarity_score": 9.0,\n'
+        '  "feedback_text": "Detailed constructive feedback covering strengths and areas for improvement.",\n'
+        '  "weakest_subtopic": "Specific subconcept to review, or null"\n'
+        "}"
+    )
+
+    user_prompt = (
+        f"Question Asked: {question_text}\n"
+        f"Topic Domain: {topic}\n"
+        f"Candidate Answer: {clean_ans}\n\n"
+        f"Evaluate the candidate answer and return the JSON evaluation object:"
+    )
+
+    try:
+        raw_json = generate_llm_text(
+            prompt=user_prompt,
+            system_prompt=system_prompt,
+            json_mode=True,
+            timeout=25.0,
+        )
+        parsed = json.loads(raw_json)
+
+        correctness = round(min(10.0, max(0.0, float(parsed.get("correctness_score", 7.0)))), 2)
+        completeness = round(min(10.0, max(0.0, float(parsed.get("completeness_score", 6.5)))), 2)
+        clarity = round(min(10.0, max(0.0, float(parsed.get("clarity_score", 8.0)))), 2)
+        feedback = str(parsed.get("feedback_text", "Detailed technical response evaluated.")).strip()
+        weakest = parsed.get("weakest_subtopic")
+        weakest_subtopic = str(weakest).strip() if weakest and str(weakest).lower() != "null" else None
+
+        return (correctness, completeness, clarity, feedback, weakest_subtopic)
+
+    except Exception as err:
+        LOGGER.warning("LLM rubric evaluation failed: %s. Using heuristic rubric fallback.", err)
+
+    # Heuristic fallback if LLM call or JSON parsing fails
     topic_words = set(topic.lower().split())
     ans_words = set(clean_ans.lower().split())
     topic_matches = len(topic_words.intersection(ans_words))
 
-    # Correctness calculation
     correctness = min(10.0, max(4.0, 5.0 + (topic_matches * 1.5) + (min(word_count, 100) / 25.0)))
-
-    # Completeness calculation based on explanation structures (e.g. contains 'because', 'for example', 'such as', 'whereas')
     indicators = ["because", "example", "such as", "where", "mode", "type", "key", "result", "using", "first", "second"]
     found_indicators = sum(1 for ind in indicators if ind in clean_ans.lower())
     completeness = min(10.0, max(3.0, 4.0 + (found_indicators * 1.2) + (min(word_count, 120) / 30.0)))
-
-    # Clarity calculation based on sentence structure
     sentences = [s for s in clean_ans.split(".") if s.strip()]
     clarity = min(10.0, max(5.0, 6.0 + (min(len(sentences), 5) * 0.8)))
 
@@ -59,12 +97,11 @@ def _compute_rubric_scores(
     completeness = round(completeness, 2)
     clarity = round(clarity, 2)
 
-    feedback_parts = [
-        f"Correctness ({correctness}/10): Good understanding of core concepts.",
-        f"Completeness ({completeness}/10): Cover more practical edge cases and trade-offs.",
-        f"Clarity ({clarity}/10): Clear structure and explanation flow.",
-    ]
-    feedback = " ".join(feedback_parts)
+    feedback = (
+        f"Correctness ({correctness}/10): Relevant technical concepts included. "
+        f"Completeness ({completeness}/10): Expand on edge cases and mechanisms. "
+        f"Clarity ({clarity}/10): Structured explanation."
+    )
     weakest_subtopic = f"Advanced edge cases in {topic}" if completeness < 7.0 else None
 
     return (correctness, completeness, clarity, feedback, weakest_subtopic)

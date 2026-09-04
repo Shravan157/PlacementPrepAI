@@ -7,6 +7,7 @@ export default function Signup() {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
 
@@ -66,8 +67,9 @@ export default function Signup() {
 
                     <form onSubmit={handleSignup}>
                         <div className="form-group">
-                            <label>Full Name</label>
+                            <label htmlFor="signup-name">Full Name</label>
                             <input
+                                id="signup-name"
                                 type="text"
                                 className="form-input"
                                 placeholder="Ada Lovelace"
@@ -78,8 +80,9 @@ export default function Signup() {
                         </div>
 
                         <div className="form-group">
-                            <label>Email Address</label>
+                            <label htmlFor="signup-email">Email Address</label>
                             <input
+                                id="signup-email"
                                 type="email"
                                 className="form-input"
                                 placeholder="student@university.edu"
@@ -90,21 +93,60 @@ export default function Signup() {
                         </div>
 
                         <div className="form-group">
-                            <label>Password</label>
-                            <input
-                                type="password"
-                                className="form-input"
-                                placeholder="At least 8 characters"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                                minLength={8}
-                            />
+                            <label htmlFor="signup-password">Password</label>
+                            <div className="password-input-wrapper" style={{ position: 'relative' }}>
+                                <input
+                                    id="signup-password"
+                                    type={showPassword ? 'text' : 'password'}
+                                    className="form-input"
+                                    placeholder="At least 8 characters"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    style={{ paddingRight: '40px' }}
+                                    required
+                                    minLength={8}
+                                />
+                                <button
+                                    type="button"
+                                    className="password-toggle-btn"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    title={showPassword ? 'Hide password' : 'Show password'}
+                                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                    style={{
+                                        position: 'absolute',
+                                        right: '10px',
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        background: 'none',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        color: '#6b7280',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        padding: '4px',
+                                    }}
+                                >
+                                    {showPassword ? (
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                                        </svg>
+                                    ) : (
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                        </svg>
+                                    )}
+                                </button>
+                            </div>
+                            <div style={{ fontSize: '.75rem', color: password.length >= 8 ? '#16a34a' : '#6b7280', marginTop: '4px' }}>
+                                {password ? (password.length >= 8 ? '✓ Minimum 8 characters met' : `Need ${8 - password.length} more characters`) : 'Must be at least 8 characters long'}
+                            </div>
                         </div>
 
-                        {error && <div className="input-error mb-4">{error}</div>}
+                        {error && <div className="input-error mb-4" style={{ color: '#dc2626', fontSize: '.85rem', marginTop: '6px' }}>{error}</div>}
 
-                        <button type="submit" className="btn btn-primary mt-4" disabled={loading}>
+                        <button type="submit" className="btn btn-primary mt-4" disabled={loading || password.length < 8} style={{ width: '100%', marginTop: '16px' }}>
                             {loading ? 'Registering...' : 'Sign up →'}
                         </button>
                     </form>

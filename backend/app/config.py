@@ -28,6 +28,13 @@ class Settings(BaseSettings):
     dataset_root: Path
     chroma_persist_directory: Path = Path("chroma_db")
 
+    # ── LLM API Configuration ──────────────────────────────────────────────────
+    gemini_api_key: str = ""
+    groq_api_key: str = ""
+    default_llm_provider: str = "gemini"
+    gemini_model: str = "gemini-3.6-flash"
+    groq_model: str = "openai/gpt-oss-120b"
+
     @field_validator("dataset_root")
     @classmethod
     def resolve_dataset_root(cls, value: Path) -> Path:

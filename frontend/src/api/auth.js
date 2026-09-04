@@ -48,6 +48,16 @@ export const getCurrentUser = async () => {
 };
 
 /**
+ * Update authenticated user profile (name or password).
+ * @param {Object} updateData - { name?, password? }
+ * @returns {Promise<Object>} Updated UserOut object
+ */
+export const updateUserProfile = async (updateData) => {
+  const response = await apiClient.put('/auth/me', updateData);
+  return response.data;
+};
+
+/**
  * Logout user by clearing stored token.
  */
 export const logoutUser = () => {

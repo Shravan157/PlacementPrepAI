@@ -1,25 +1,38 @@
 import apiClient from './client';
 
 /**
- * Practice API Service (Planned / Phase 2)
- * Placeholders for /practice endpoints documented in API_REFERENCE.md
+ * Practice API Service
+ * Endpoint wrappers matching backend practice router.
  */
 
-export const startPracticeSession = async (subject = 'dbms') => {
-  const response = await apiClient.post('/practice/start', null, {
-    params: { subject },
+export const generateQuestion = async ({
+  subject,
+  topic,
+  company_type = 'product_based',
+  difficulty_tag = 'medium',
+  generation_method = 'rag_generated',
+}) => {
+  const response = await apiClient.post('/practice/questions', {
+    subject,
+    topic,
+    company_type,
+    difficulty_tag,
+    generation_method,
   });
   return response.data;
 };
 
-export const submitAnswer = async (sessionId, answerText) => {
-  const response = await apiClient.post(`/practice/${sessionId}/answer`, {
-    answer: answerText,
+export const submitAnswer = async ({ question_id, answer_text }) => {
+  const response = await apiClient.post('/practice/answers', {
+    question_id,
+    answer_text,
   });
   return response.data;
 };
 
-export const getNextQuestion = async (sessionId) => {
-  const response = await apiClient.get(`/practice/${sessionId}/question`);
+export const getCoverage = async (subject = null) => {
+  const response = await apiClient.get('/practice/coverage', {
+    params: subject ? { subject } : {},
+  });
   return response.data;
 };

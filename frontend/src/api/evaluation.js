@@ -1,9 +1,16 @@
 import apiClient from './client';
 
 /**
- * Evaluation API Service (Planned / Phase 2)
- * Placeholders for /evaluation endpoints documented in API_REFERENCE.md
+ * Evaluation API Service
+ * Endpoint wrappers matching backend evaluation router.
  */
+
+export const evaluateAnswer = async (answer_id) => {
+  const response = await apiClient.post('/evaluation/evaluate', {
+    answer_id,
+  });
+  return response.data;
+};
 
 export const getAnswerEvaluation = async (answerId) => {
   const response = await apiClient.get(`/evaluation/${answerId}`);
