@@ -20,8 +20,8 @@ ENV/
 # Note: .env files included per project repository instructions (with DB password masked)
 
 
-# ── Datasets (PDFs — likely copyrighted, must not be committed) ────────────────
-datasets/**/*.pdf
+# ── Datasets ───────────────────────────────────────────────────────────────────
+# Syllabus PDFs included for seamless team setup
 
 # ── Vector store persisted to disk (populated at runtime) ─────────────────────
 chroma_db/
