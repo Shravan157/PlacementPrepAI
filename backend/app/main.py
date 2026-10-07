@@ -28,18 +28,22 @@ app = FastAPI(
 )
 
 # ── CORS ──────────────────────────────────────────────────────────────────────
-# The Vite development UI runs on a different local origin from the API.  Its
-# JSON auth requests trigger a browser preflight, so CORS must be configured on
-# the API rather than letting OPTIONS fall through to the auth router (405).
+# Allow local development frontend origins and standard HTTP methods/headers.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
         "http://127.0.0.1:5173",
+        "http://localhost:8443",
+        "http://127.0.0.1:8443",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:5174",
+        "http://127.0.0.1:5174",
     ],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # ── Rate limiter ───────────────────────────────────────────────────────────────

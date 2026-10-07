@@ -1,0 +1,11 @@
+{
+  "title": "Placement Prep AI — Technical Mock Interview & Evaluation",
+  "description": "AI-powered technical interviews and 30-point rubric evaluation for core CS campus placements (DSA, DBMS, OS, CN, OOP).",
+  "robots": {
+    "index": true
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
