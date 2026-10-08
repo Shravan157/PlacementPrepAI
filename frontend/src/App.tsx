@@ -86,6 +86,8 @@ const iconPaths: Record<string, ReactNode> = {
   user: <><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></>,
   arrow: <path d="M5 12h14M14 7l5 5-5 5" />,
   chevron: <path d="m8 10 4 4 4-4" />,
+  eye: <><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></>,
+  eyeOff: <><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><path d="M2 2l20 20"/></>,
   spark: <path d="m12 2 1.7 5.3L19 9l-5.3 1.7L12 16l-1.7-5.3L5 9l5.3-1.7L12 2ZM5 17l.8 2.2L8 20l-2.2.8L5 23l-.8-2.2L2 20l2.2-.8L5 17Z" />,
   upload: <><path d="M12 16V4M7 9l5-5 5 5" /><path d="M4 15v5h16v-5" /></>,
   check: <path d="m5 12 4 4L19 6" />,
@@ -320,6 +322,7 @@ function AuthModal({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -394,14 +397,24 @@ function AuthModal({
           </label>
           <label className="block">
             <span className="field-label">Password</span>
-            <input
-              type="password"
-              className="field"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                className="field pr-10"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-3.5 text-[#777] hover:text-[#181a1b] transition"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                <Icon name={showPassword ? "eyeOff" : "eye"} size={16} />
+              </button>
+            </div>
           </label>
           <Button type="submit" disabled={loading} className="mt-2 w-full py-3">
             {loading ? "Processing..." : signup ? "Create account" : "Sign in"}
